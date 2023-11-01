@@ -1,0 +1,55 @@
+<html>
+  <head>
+    <title>Pyscript, marked, tailwind</title>
+    <meta charset="utf-8">
+
+    <script src="https://cdn.tailwindcss.com?plugins=typography,forms"></script>
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <py-config> packages = ["matplotlib", "pandas", "seaborn"] </py-config>
+
+  </head>
+  <body class='container mx-auto max-w-screen-sm pt-12 prose'>
+
+    <md-block>
+# A simple serverless static interactive python notebook 
+The notebook you see here executes Python code directly in the browser thanks to Pyscript. 
+Tailwind.css and marked.js are used to render the text written in Markdown directly into the HTML. This page is entirely static and created without compilation. 
+The code for this page is displayed below. To learn more, you can read the article here:
+
+## Interactive Python code in the browser
+Success score in French middle schools against parents's socio-professional level, by county.
+    </md-block>
+
+    <label for="dep">Select a county </label>
+    <select id="dep" name="dep">
+        <option value="AVEYRON">AVEYRON</option>
+        <option value="PARIS">PARIS</option>
+        <option value="GUYANE">GUYANE</option>
+        <option value="HAUTS-DE-SEINE">HAUTS-DE-SEINE</option>
+    </select>
+
+    <div id="graph-area">Processing...</div>
+
+    <py-script>
+import pandas as pd, numpy as np, seaborn as sns, matplotlib.pyplot as plt
+from js import document; from pyscript import when; from pyodide.http import open_url
+
+df = pd.read_csv(open_url("final.csv"))
+
+@when("change", "#dep")
+def chart():
+  dep = document.querySelector("#dep").value
+  g = sns.jointplot(x='ips', y='taux_mention_bien+', data=df, kind="hex");
+  sns.scatterplot(x='ips', y='taux_mention_bien+', data=df.query('departement == @dep'), s=18, ax=g.ax_joint, color='red')
+  display(plt.gcf(), target="graph-area", append=False)
+
+chart()
+    </py-script>
+
+    <script defer>for (const mdBlock of document.querySelectorAll('md-block')) mdBlock.innerHTML = marked.parse(mdBlock.innerHTML) ;</script>
+    <style>  py-config,py-script:not(:defined),py-repl:not(:defined),py-terminal { display: none}</style>  
+  </body>
+</html>
+
